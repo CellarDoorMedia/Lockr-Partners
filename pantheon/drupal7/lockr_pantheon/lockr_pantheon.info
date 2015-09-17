@@ -1,0 +1,5 @@
+name = Lockr Pantheon Client
+description = Integrate with the Lockr key management platform.
+package = Lockr
+version = "7.x-1.0-beta"
+core = 7.x

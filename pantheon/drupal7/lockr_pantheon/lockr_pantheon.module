@@ -1,0 +1,118 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations and callbacks for lockr_pantheon.
+ */
+
+/**
+ * Include our autoloader.
+ */
+require_once __DIR__ . '/autoload.php';
+
+\Lockr\Client::$certPath = '/srv/bindings/' . PANTHEON_BINDING . '/certs/binding.pem';
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function lockr_pantheon_ctools_plugin_directory($module, $plugin) {
+  if ($module === 'key') {
+    return "plugins/{$plugin}";
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function lockr_pantheon_menu() {
+  $items = array();
+
+  $items['admin/config/system/lockr'] = array(
+    'title' => t('Lockr'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lockr_pantheon_register_form'),
+    'access arguments' => array('administer keys'),
+    'file' => 'lockr_pantheon.register.inc',
+  );
+
+  $items['admin/config/system/lockr/login'] = array(
+    'title' => t('Login to Lockr'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lockr_pantheon_login_form'),
+    'access arguments' => array('administer keys'),
+    'file' => 'lockr_pantheon.login.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Returns if this site is currently registered with Lockr.
+ *
+ * @return bool
+ * TRUE if this site is registered, FALSE if not.
+ */
+function lockr_pantheon_check_registration() {
+  return \Lockr\SiteClient::create()->exists();
+}
+
+/**
+ * Gets a key from Lockr.
+ *
+ * @param string $key_name
+ * The key name.
+ *
+ * @return string | FALSE
+ * Returns the key value, or FALSE on failure.
+ */
+function _lockr_pantheon_get_key($key_name) {
+  return \Lockr\KeyClient::create()->get(new \Lockr\Key($key_name));
+}
+
+/**
+ * Sets a key value in lockr.
+ *
+ * @param string $key_name
+ * The key name.
+ * @param string $key_value
+ * The key value.
+ * @param string $key_label
+ * The key label.
+ * @param string|bool $old_name
+ * The old key name if it changed.
+ *
+ * @return bool
+ * TRUE if they key set successfully, FALSE if not.
+ */
+function _lockr_pantheon_set_key(
+  $key_name,
+  $key_value,
+  $key_label = NULL,
+  $old_name = FALSE
+) {
+  return \Lockr\KeyClient::create()
+    ->set(new \Lockr\Key($key_name, $key_label, $old_name), $key_value);
+}
+
+/**
+ * Deletes a key from Lockr.
+ *
+ * @param string $key_name
+ * The key name
+ */
+function _lockr_pantheon_delete_key($key_name) {
+  \Lockr\KeyClient::create()->delete(new \Lockr\Key($key_name));
+}
+
+/**
+ * Checks if a key exists in Lockr.
+ *
+ * @param string $key_name
+ * The key name.
+ *
+ * @return bool
+ * TRUE if the key exists, FALSE if not.
+ */
+function _lockr_pantheon_check_key($key_name) {
+  return \Lockr\KeyClient::create()->exists(new \Lockr\Key($key_name));
+}
