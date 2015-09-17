@@ -103,7 +103,7 @@ function key_provider_lockr_key_value_form($defaults) {
       ),
       '#required' => TRUE,
     );
-    $form['register_blocked'] => array(
+    $form['register_blocked'] = array(
       '#type' => 'hidden',
       '#required' => TRUE,
     );
@@ -115,13 +115,14 @@ function key_provider_lockr_key_value_form($defaults) {
         'environment. Contact us at beta@getlockr.io'
       ),
       '#required' => TRUE,
-      $form['register_blocked'] = array(
-        '#type' => 'hidden',
-        '#required' => TRUE,
-      );
+    );
+    $form['register_blocked'] = array(
+      '#type' => 'hidden',
+      '#required' => TRUE,
+    );
   }
   else {
-    $form['key_text'] => array(
+    $form['key_text'] = array(
       '#type' => 'textarea',
       '#title' => t('Key value'),
       '#description' => t('Enter the key value to save in Lockr key manager'),
