@@ -112,7 +112,7 @@ function key_provider_lockr_key_value_form($defaults) {
     $form['subscription'] = array(
       '#markup' => t(
         'Sign up for the beta to take advantage of Lockr in your producntion ' .
-        'environment. Contact us at beta@getlockr.io'
+        'environment. Contact us at beta@lockr.io'
       ),
       '#required' => TRUE,
     );

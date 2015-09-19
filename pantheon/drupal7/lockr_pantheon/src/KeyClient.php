@@ -16,7 +16,7 @@ class KeyClient extends Client {
    * @const BASE_URI
    * The client base URI.
    */
-  const BASE_URI = 'https://api.getlockr.io/api/v1.0/key';
+  const BASE_URI = 'https://api.lockr.io/api/v1.0/key';
 
   /**
    * Gets a key value from the remote service.

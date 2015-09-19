@@ -44,7 +44,7 @@ function lockr_pantheon_register_form($form, &$form_state) {
         'your keys entered in the key settings are already protected. ' .
         'If you registered with the wrong account, you can ' .
         'click <a href="@link" target="_blank">here</a> to go to Lockr and manage your sites.',
-        array('@link' => 'http://getlockr.io/user/login')
+        array('@link' => 'http://lockr.io/user/login')
       ),
       '#suffix' => '</p>',
     );

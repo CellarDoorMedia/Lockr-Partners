@@ -16,7 +16,7 @@ class SiteClient extends Client {
    * @const BASE_URI
    * The client base URI.
    */
-  const BASE_URI = 'https://api.getlockr.io/api/v1.0/site';
+  const BASE_URI = 'https://api.lockr.io/api/v1.0/site';
 
   /**
    * @const ALREADY_EXISTS
