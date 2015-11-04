@@ -5,6 +5,9 @@
  * Form callbacks for the Lockr login form.
  */
 
+use Lockr\Exception\ClientException;
+use Lockr\Exception\ServerException;
+
 /**
  * Login form that will turn around and use the credentials to register
  * the site with Lockr.
@@ -56,15 +59,18 @@ function lockr_pantheon_login_form_validate($form, &$form_state) {
  */
 function lockr_pantheon_login_form_submit($form, &$form_state) {
   $values = $form_state['values'];
-  $return = \Lockr\SiteClient::create()->register($values['email'], $values['pass']);
-  if ($return === \Lockr\SiteClient::ALREADY_EXISTS) {
+  $name = variable_get('site_name');
+  try {
+    \Lockr\Lockr::site()->register($values['email'], $values['pass'], $name);
+  }
+  catch (ClientException $e) {
     form_set_error('', t('Login credentials incorrect, please try again.'));
+    return;
   }
-  elseif ($return === \Lockr\SiteClient::UNKNOWN_ERROR) {
+  catch (ServerException $e) {
     form_set_error('', t('An unknown error has occurred, please try again later.'));
+    return;
   }
-  else {
-    drupal_set_message(t("That's it! This site is added to Lockr; your keys are now safe."));
-    $form_state['redirect'] = $form_state['storage']['next'];
-  }
+  drupal_set_message(t("That's it! This site is added to Lockr; your keys are now safe."));
+  $form_state['redirect'] = $form_state['storage']['next'];
 }

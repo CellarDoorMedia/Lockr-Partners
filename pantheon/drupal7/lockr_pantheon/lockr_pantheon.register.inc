@@ -5,6 +5,9 @@
  * Form callbacks for Lockr register form.
  */
 
+use Lockr\Exception\ClientException;
+use Lockr\Exception\ServerException;
+
 /**
  * Form constructor for Prisondog registration form.
  *
@@ -16,8 +19,8 @@
 function lockr_pantheon_register_form($form, &$form_state) {
   $form = array();
 
-  $site = lockr_pantheon_check_registration();
-  if (!$site['exists']) {
+  list($exists, $available) = lockr_pantheon_check_registration();
+  if (!$exists) {
     $form['email'] = array(
       '#type' => 'textfield',
       '#title' => t('Email address'),
@@ -71,10 +74,12 @@ function lockr_pantheon_register_form_validate($form, &$form_state) {
  */
 function lockr_pantheon_register_form_submit($form, &$form_state) {
   $values = $form_state['values'];
-  $return = \Lockr\SiteClient::create()->register($values['email']);
-
   $next = $form_state['storage']['redirect'];
-  if ($return === \Lockr\SiteClient::ALREADY_EXISTS) {
+  $name = variable_get('site_name');
+  try {
+    \Lockr\Lockr::site()->register($values['email'], null, $name);
+  }
+  catch (ClientException $e) {
     drupal_set_message(t('This email is already registered with Lockr. ' .
                          'Please login to register a new site.'));
     drupal_goto('admin/config/system/lockr/login', array(
@@ -84,12 +89,10 @@ function lockr_pantheon_register_form_submit($form, &$form_state) {
       ),
     ));
   }
-
-  if ($return === \Lockr\SiteClient::UNKNOWN_ERROR) {
+  catch (ServerException $e) {
     form_set_error('', t('An unknown error has occurred, please try again later.'));
   }
-  else {
-    drupal_set_message(t("That's it! You're signed up with Lockr; your keys are now safe."));
-    $form_state['redirect'] = $next;
-  }
+
+  drupal_set_message(t("That's it! You're signed up with Lockr; your keys are now safe."));
+  $form_state['redirect'] = $next;
 }

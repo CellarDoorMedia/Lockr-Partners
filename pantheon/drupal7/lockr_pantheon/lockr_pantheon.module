@@ -5,12 +5,13 @@
  * Hook implementations and callbacks for lockr_pantheon.
  */
 
+use Lockr\Exception\ClientException;
+use Lockr\Exception\ServerException;
+
 /**
  * Include our autoloader.
  */
 require_once __DIR__ . '/autoload.php';
-
-\Lockr\Client::$certPath = '/srv/bindings/' . PANTHEON_BINDING . '/certs/binding.pem';
 
 /**
  * Implements hook_ctools_plugin_directory().
@@ -53,7 +54,15 @@ function lockr_pantheon_menu() {
  * TRUE if this site is registered, FALSE if not.
  */
 function lockr_pantheon_check_registration() {
-  return \Lockr\SiteClient::create()->exists();
+  try {
+    return \Lockr\Lockr::site()->exists();
+  }
+  catch (ServerException $e) {
+    return FALSE;
+  }
+  catch (ClientException $e) {
+    return FALSE;
+  }
 }
 
 /**
@@ -65,8 +74,13 @@ function lockr_pantheon_check_registration() {
  * @return string | FALSE
  * Returns the key value, or FALSE on failure.
  */
-function _lockr_pantheon_get_key($key_name) {
-  return \Lockr\KeyClient::create()->get(new \Lockr\Key($key_name));
+function _lockr_pantheon_get_key($key_name, $encoded) {
+  try {
+    return \Lockr\Lockr::key()->encrypted($encoded)->get($key_name);
+  }
+  catch (\Exception $e) {
+    return FALSE;
+  }
 }
 
 /**
@@ -84,14 +98,14 @@ function _lockr_pantheon_get_key($key_name) {
  * @return bool
  * TRUE if they key set successfully, FALSE if not.
  */
-function _lockr_pantheon_set_key(
-  $key_name,
-  $key_value,
-  $key_label = NULL,
-  $old_name = FALSE
-) {
-  return \Lockr\KeyClient::create()
-    ->set(new \Lockr\Key($key_name, $key_label, $old_name), $key_value);
+function _lockr_pantheon_set_key($key_name, $key_value, $key_label) {
+  try {
+    return \Lockr\Lockr::key()->encrypted()
+      ->set($key_name, $key_value, $key_label);
+  }
+  catch (\Exception $e) {
+    return FALSE;
+  }
 }
 
 /**
@@ -101,18 +115,5 @@ function _lockr_pantheon_set_key(
  * The key name
  */
 function _lockr_pantheon_delete_key($key_name) {
-  \Lockr\KeyClient::create()->delete(new \Lockr\Key($key_name));
-}
-
-/**
- * Checks if a key exists in Lockr.
- *
- * @param string $key_name
- * The key name.
- *
- * @return bool
- * TRUE if the key exists, FALSE if not.
- */
-function _lockr_pantheon_check_key($key_name) {
-  return \Lockr\KeyClient::create()->exists(new \Lockr\Key($key_name));
+  \Lockr\Lockr::key()->delete($key_name);
 }

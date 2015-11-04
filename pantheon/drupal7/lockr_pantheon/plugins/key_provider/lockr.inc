@@ -21,8 +21,11 @@ $plugin = array(
  */
 function key_provider_lockr_get_key($config) {
   $key_name = $config['name'];
-  $key_value = _lockr_pantheon_get_key($key_name);
-  return $key_value !== FALSE ? $key_value : NULL;
+  $encoded = isset($config['provider_settings']['encoded'])
+    ? $config['provider_settings']['encoded']
+    : NULL;
+  $key_value = _lockr_pantheon_get_key($key_name, $encoded);
+  return $key_value ?: NULL;
 }
 
 /**
@@ -38,12 +41,13 @@ function key_provider_lockr_config_form_submit($form, &$form_state) {
   $obscured = '';
   $old_name = FALSE;
   if (isset($form['#original_key'])) {
-    $old_Key = $form['#original_key'];
+    $old_key = $form['#original_key'];
     if (isset($old_key['key_value_obscured'])) {
       $obscured = $old_key['key_value_obscured'];
     }
     if (isset($old_key['config']['name'])) {
       $old_name = $old_key['config']['name'];
+      _lockr_pantheon_delete_key($old_name);
     }
   }
 
@@ -55,10 +59,14 @@ function key_provider_lockr_config_form_submit($form, &$form_state) {
   $key_name = $values['name'];
   $label = $values['label'];
 
-  if (!_lockr_pantheon_set_key($key_name, $key_value, $label, $old_name)) {
+  $encoded = _lockr_pantheon_set_key($key_name, $key_value, $label);
+  if (!$encoded) {
     form_set_error('', t(
       'An error occured in Lockr. Please try again later.'
     ));
+  }
+  else {
+    $form_state['values']['provider_settings']['encoded'] = $encoded;
   }
 }
 
@@ -92,9 +100,9 @@ function key_provider_lockr_key_value_form($defaults) {
   if ($path[0] !== '/') {
     $path = '/' . $path;
   }
-  $site = lockr_pantheon_check_registration();
+  list($exists, $available) = lockr_pantheon_check_registration();
 
-  if (!$site['exists']) {
+  if (!$exists) {
     $form['register'] = array(
       '#markup' => t(
         'Haven\'t registered yet? Click <a href="/admin/config/system/lockr?next=@next">here</a> ' .
@@ -108,7 +116,7 @@ function key_provider_lockr_key_value_form($defaults) {
       '#required' => TRUE,
     );
   }
-  elseif (!$site['available']) {
+  elseif (!$available) {
     $form['subscription'] = array(
       '#markup' => t(
         'Sign up for the beta to take advantage of Lockr in your producntion ' .

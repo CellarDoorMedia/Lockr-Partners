@@ -9,14 +9,12 @@ function lockr_pantheon_autoload($class) {
   if (substr($class, 0, 6) !== 'Lockr\\') {
     return FALSE;
   }
-  $parts = explode('\\', $class);
-  array_shift($parts);
-  $path = array('src');
-  foreach ($parts as $part) {
-    $path[] = $part;
+  $file = __DIR__.'/src/'.str_replace('\\', '/', $class).'.php';
+  if (file_exists($file)) {
+    include_once $file;
+    return true;
   }
-  require_once __DIR__ . '/' . implode('/', $path) . '.php';
-  return TRUE;
+  return false;
 }
 
 spl_autoload_register('lockr_pantheon_autoload');
