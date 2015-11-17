@@ -1,0 +1,5 @@
+name: Pantheon Lockr Key Provider
+description: Provides the Lockr key provider.
+package: Lockr
+type: module
+core: 8.x
