@@ -1,5 +1,5 @@
-name: Pantheon Lockr Key Provider
-description: Provides the Lockr key provider.
-package: Lockr
+name: Lockr - Pantheon
+description: Plugin for the Key module to integrate with Lockr, a hosted offsite key management platform.
+package: Security
 type: module
 core: 8.x
