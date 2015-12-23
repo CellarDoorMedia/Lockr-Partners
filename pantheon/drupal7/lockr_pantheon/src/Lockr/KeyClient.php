@@ -54,21 +54,17 @@ class KeyClient
 
         $body = json_decode($body, true);
 
-        $body_error = (json_last_error() !== JSON_ERROR_NONE)
-            || !isset($body['data']);
-        if ($body_error || $status >= 500) {
+        if (json_last_error() !== JSON_ERROR_NONE || $status >= 500) {
             throw new ServerException();
         }
         if ($status >= 400) {
             throw new ClientException();
         }
 
-        $data = $body['data'];
-
         if (null !== $this->encoded) {
-            return $this->decrypt($data['key_value'], $this->encoded);
+            return $this->decrypt($body['key_value'], $this->encoded);
         }
-        return $data['key_value'];
+        return $body['key_value'];
     }
 
     /**
@@ -116,7 +112,7 @@ class KeyClient
 
     protected function uri($name)
     {
-        return '/v1.0/key/'.urlencode($name);
+        return '/v1/key/'.urlencode($name);
     }
 
     protected function encrypt($plaintext)

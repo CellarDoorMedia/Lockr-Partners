@@ -33,7 +33,7 @@ class Partner implements PartnerInterface
      */
     public function getReadUri()
     {
-        return 'https://pantheon.api.lockr.io/api';
+        return 'https://pantheon.api.lockr.io';
     }
 
     /**
@@ -41,6 +41,6 @@ class Partner implements PartnerInterface
      */
     public function getWriteUri()
     {
-        return 'https://pantheon.api.lockr.io/api';
+        return 'https://pantheon.api.lockr.io';
     }
 }

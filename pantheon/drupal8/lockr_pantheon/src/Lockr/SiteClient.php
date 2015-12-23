@@ -40,23 +40,20 @@ class SiteClient
      */
     public function exists()
     {
-        list($status, $body) = $this->client->get('/v1.0/site/exists');
+        list($status, $body) = $this->client->get('/v1/site/exists');
 
         $body = json_decode($body, true);
 
-        $body_error = (json_last_error() !== JSON_ERROR_NONE)
-            || !isset($body['data']);
-        if ($body_error || $status >= 500) {
+        if (json_last_error() !== JSON_ERROR_NONE || $status >= 500) {
             throw new ServerException();
         }
         if ($status >= 400) {
             throw new ClientException();
         }
 
-        $data = $body['data'];
         return array(
-            isset($data['exists']) ? (bool) $data['exists'] : false,
-            isset($data['available']) ? (bool) $data['available'] : false,
+            isset($body['exists']) ? (bool) $body['exists'] : false,
+            isset($body['available']) ? (bool) $body['available'] : false,
         );
     }
 
@@ -84,7 +81,7 @@ class SiteClient
         }
 
         list($status, $_) = $this->client->post(
-            '/v1.0/site/register',
+            '/v1/site/register',
             $data,
             $auth
         );
