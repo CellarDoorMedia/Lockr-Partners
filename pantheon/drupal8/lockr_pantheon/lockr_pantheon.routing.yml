@@ -1,7 +1,7 @@
 lockr.register:
   path: '/admin/config/system/lockr/register'
   defaults:
-    _form: '\Drupal\lockr_pantheon\LockrRegisterForm'
+    _form: '\Drupal\lockr_pantheon\Form\LockrRegisterForm'
     _title: 'Lockr'
   requirements:
     _permission: 'administer keys'
@@ -9,7 +9,7 @@ lockr.register:
 lockr.login:
   path: '/admin/config/system/lockr/login'
   defaults:
-    _form: '\Drupal\lockr_pantheon\LockrLoginForm'
+    _form: '\Drupal\lockr_pantheon\Form\LockrLoginForm'
     _title: 'Lockr'
   requirements:
     _permission: 'administer keys'

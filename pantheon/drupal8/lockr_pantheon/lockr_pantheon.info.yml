@@ -1,5 +1,10 @@
 name: Lockr - Pantheon
 description: Plugin for the Key module to integrate with Lockr, a hosted offsite key management platform.
 package: Security
+
 type: module
 core: 8.x
+
+dependencies: [key]
+
+configure: lockr.register

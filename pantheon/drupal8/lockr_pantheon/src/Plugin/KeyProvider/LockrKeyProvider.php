@@ -7,11 +7,13 @@
 
 namespace Drupal\lockr_pantheon\Plugin\KeyProvider;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\key\KeyInterface;
-use Drupal\key\KeyProviderBase;
+use Drupal\key\Plugin\KeyPluginFormInterface;
+use Drupal\key\Plugin\KeyProviderBase;
+use Drupal\key\Plugin\KeyProviderSettableValueInterface;
 
 use Drupal\lockr_pantheon\Lockr\Lockr;
 
@@ -20,69 +22,43 @@ use Drupal\lockr_pantheon\Lockr\Lockr;
  *
  * @KeyProvider(
  *   id = "lockr",
- *   title = "Lockr",
- *   description = @Translation("Allows a key to be stored in the Lockr key management platform."),
+ *   label = "Lockr",
+ *   description = @Translation("The Lockr key provider stores the key in Lockr key management service."),
  *   storage_method = "lockr",
+ *   key_value = {
+ *     "accepted" = TRUE,
+ *     "required" = TRUE
+ *   }
  * )
  */
-class LockrKeyProvider extends KeyProviderBase {
+class LockrKeyProvider extends KeyProviderBase
+  implements KeyProviderSettableValueInterface, KeyPluginFormInterface {
 
   /**
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return [
-      'encoded' => '',
-    ];
+    return ['encoded' => ''];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    $route = \Drupal::service('current_route_match')->getRouteName();
-
-    list($exists, $available) = Lockr::site()->exists();
+  public function buildConfigurationForm(
+    array $form,
+    FormStateInterface $form_state
+  ) {
+    list($exists, $_) = Lockr::site()->exists();
 
     if (!$exists) {
-      $form['register'] = [
+      $form['need_register'] = [
+        '#prefix' => '<p>',
         '#markup' => $this->t(
-          'Haven\'t registered yet? Click <a href="@link">here</a> ' .
-          'to register first before entering your key.',
-          ['@link' => Url::fromRoute(
-            'lockr.register',
-            [],
-            ['query' => ['next' => $route]]
-          )->toString()]
+          'This site has not yet registered with Lockr, ' .
+          'please <a href="@link">click here to register</a>.',
+          ['@link' => Url::fromRoute('lockr.register')->toString()]
         ),
-        '#required' => TRUE,
-      ];
-      $form['register_blocked'] = [
-        '#type' => 'hidden',
-        '#required' => TRUE,
-      ];
-    }
-    elseif (!$available) {
-      $form['subscription'] = [
-        '#markup' => $this->t(
-          'Sign up for the beta to take advantage of Lockr in your production ' .
-          'environment. Contact us at beta@lockr.io'
-        ),
-        '#required' => TRUE,
-      ];
-      $form['register_blocked'] = [
-        '#type' => 'hidden',
-        '#required' => TRUE,
-      ];
-    }
-    else {
-      $key = $form_state->get('key_entity');
-      $form['key_value'] = [
-        '#type' => 'textarea',
-        '#title' => $this->t('Key value'),
-        '#default_value' => $key->isNew() ? NULL : $this->getKeyValue($key),
-        '#description' => $this->t('Enter the key to save in the Lockr key management platform.'),
-        '#required' => TRUE,
+        '#suffix' => '</p>',
       ];
     }
 
@@ -92,41 +68,74 @@ class LockrKeyProvider extends KeyProviderBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    $name = $form_state->getValue('id');
-    $value = $form_state->getValue('key_provider_settings')['key_value'];
-    $label = $form_state->getValue('label');
+  public function validateConfigurationForm(
+    array &$form,
+    FormStateInterface $form_state
+  ) {
+  }
 
-    try {
-      $encoded = Lockr::key()
-        ->encrypted()
-        ->set($name, $value, $label);
-    }
-    catch (\Exception $e) {
-      return FALSE;
-    }
-
-    $this->configuration['encoded'] = $encoded;
-
-    return TRUE;
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(
+    array &$form,
+    FormStateInterface $form_state
+  ) {
   }
 
   /**
    * {@inheritdoc}
    */
   public function getKeyValue(KeyInterface $key) {
-    $encoded = $this->configuration['encoded'];
-
+    $name = $key->id();
+    $encoded = $this->getConfiguration()['encoded'];
+    $client = Lockr::key()->encrypted($encoded);
     try {
-      $value = Lockr::key()
-        ->encrypted($encoded)
-        ->get($key->id());
+      return $client->get($name);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       return FALSE;
     }
+  }
 
-    return $value;
+  /**
+   * {@inheritdoc}
+   */
+  public function setKeyValue(KeyInterface $key, $key_value) {
+    $name = $key->id();
+    $label = $key->label();
+    $client = Lockr::key()->encrypted();
+    try {
+      $encoded = $client->set($name, $key_value, $label);
+    }
+    catch (Exception $e) {
+      return FALSE;
+    }
+    $this->setConfiguration(['encoded' => $encoded]);
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteKeyValue(KeyInterface $key) {
+    $name = $key->id();
+    $client = Lockr::key();
+    try {
+      $client->delete($name);
+    }
+    catch (Exception $e) {
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function obscureKeyValue($key_value, array $options = []) {
+    return $key_value;
   }
 
 }
+
