@@ -15,6 +15,7 @@ use Drupal\key\Plugin\KeyPluginFormInterface;
 use Drupal\key\Plugin\KeyProviderBase;
 use Drupal\key\Plugin\KeyProviderSettableValueInterface;
 
+use Drupal\lockr_pantheon\Lockr\Exception\ClientException;
 use Drupal\lockr_pantheon\Lockr\Lockr;
 
 /**
@@ -107,6 +108,18 @@ class LockrKeyProvider extends KeyProviderBase
     $client = Lockr::key()->encrypted();
     try {
       $encoded = $client->set($name, $key_value, $label);
+    }
+    catch (ClientException $e) {
+      $body = $e->getMessage();
+      $data = json_decode($body, TRUE);
+      if (isset($data['title']) && $data['title'] === 'Not paid') {
+        drupal_set_message($this->t(
+          'NOTE: Key was not set. ' .
+          'Please go to <a href="@link">Lockr</a> and add a payment method.',
+          ['@link' => 'https://lockr.io/user/add-card']
+        ), 'error');
+      }
+      return FALSE;
     }
     catch (Exception $e) {
       return FALSE;
