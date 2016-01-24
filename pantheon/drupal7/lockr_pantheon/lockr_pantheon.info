@@ -1,4 +1,6 @@
 name = Lockr Pantheon Client
 description = Integrate with the Lockr key management platform.
-package = Lockr
+package = Security
 core = 7.x
+
+dependencies[] = key

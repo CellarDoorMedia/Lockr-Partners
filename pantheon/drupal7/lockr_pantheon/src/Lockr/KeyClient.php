@@ -85,13 +85,13 @@ class KeyClient
             'key_value' => $value,
             'key_label' => $label,
         );
-        list($status, $_) = $this->client->patch($this->uri($name), $data);
+        list($status, $body) = $this->client->patch($this->uri($name), $data);
 
         if ($status >= 500) {
-            throw new ServerException();
+            throw new ServerException($body);
         }
         if ($status >= 400) {
-            throw new ClientException();
+            throw new ClientException($body);
         }
 
         if ($this->encoded) {
