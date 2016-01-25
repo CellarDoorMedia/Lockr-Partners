@@ -105,9 +105,10 @@ class LockrKeyProvider extends KeyProviderBase
   public function setKeyValue(KeyInterface $key, $key_value) {
     $name = $key->id();
     $label = $key->label();
+    $encoded = $this->getConfiguration['encoded'] ?: NULL;
     $client = Lockr::key()->encrypted();
     try {
-      $encoded = $client->set($name, $key_value, $label);
+      $encoded = $client->set($name, $key_value, $label, $encoded);
     }
     catch (ClientException $e) {
       $body = $e->getMessage();
