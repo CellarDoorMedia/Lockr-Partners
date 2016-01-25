@@ -31,9 +31,9 @@ function lockr_pantheon_menu() {
   $items['admin/config/system/lockr'] = array(
     'title' => t('Lockr'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lockr_pantheon_register_form'),
+    'page arguments' => array('lockr_pantheon_admin_form'),
     'access arguments' => array('administer keys'),
-    'file' => 'lockr_pantheon.register.inc',
+    'file' => 'lockr_pantheon.admin.inc',
   );
 
   $items['admin/config/system/lockr/login'] = array(
@@ -98,10 +98,10 @@ function _lockr_pantheon_get_key($key_name, $encoded) {
  * @return bool
  * TRUE if they key set successfully, FALSE if not.
  */
-function _lockr_pantheon_set_key($key_name, $key_value, $key_label) {
+function _lockr_pantheon_set_key($key_name, $key_value, $key_label, $encoded = null) {
   $client = \Lockr\Lockr::key()->encrypted();
   try {
-    return $client->set($key_name, $key_value, $key_label);
+    return $client->set($key_name, $key_value, $key_label, $encoded);
   }
   catch (ClientException $e) {
     $body = $e->getMessage();

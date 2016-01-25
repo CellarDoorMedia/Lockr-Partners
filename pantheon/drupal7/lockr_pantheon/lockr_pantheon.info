@@ -1,5 +1,5 @@
-name = Lockr Pantheon Client
-description = Integrate with the Lockr key management platform.
+name = Lockr for Pantheon
+description = Connect to Lockr: a secure off-site key management service.
 package = Security
 core = 7.x
 

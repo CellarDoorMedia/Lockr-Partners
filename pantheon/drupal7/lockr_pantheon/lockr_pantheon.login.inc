@@ -71,6 +71,6 @@ function lockr_pantheon_login_form_submit($form, &$form_state) {
     form_set_error('', t('An unknown error has occurred, please try again later.'));
     return;
   }
-  drupal_set_message(t("That's it! This site is added to Lockr; your keys are now safe."));
+  drupal_set_message(t("That's it! This site is added to Lockr; your keys are now safely stored off-site."));
   $form_state['redirect'] = $form_state['storage']['next'];
 }

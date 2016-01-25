@@ -11,12 +11,12 @@ use Lockr\Exception\ServerException;
 /**
  * Form constructor for Prisondog registration form.
  *
- * @see lockr_pantheon_register_form_validate()
- * @see lockr_pantheon_register_form_submit()
+ * @see lockr_pantheon_admin_form_validate()
+ * @see lockr_pantheon_admin_form_submit()
  *
  * @ingroup forms
  */
-function lockr_pantheon_register_form($form, &$form_state) {
+function lockr_pantheon_admin_form($form, &$form_state) {
   $form = array();
 
   list($exists, $available) = lockr_pantheon_check_registration();
@@ -57,22 +57,22 @@ function lockr_pantheon_register_form($form, &$form_state) {
 }
 
 /**
- * Form validation handler for lockr_pantheon_register_form().
+ * Form validation handler for lockr_pantheon_admin_form().
  *
- * @see lockr_pantheon_register_form_submit()
+ * @see lockr_pantheon_admin_form_submit()
  */
-function lockr_pantheon_register_form_validate($form, &$form_state) {
+function lockr_pantheon_admin_form_validate($form, &$form_state) {
   if (!valid_email_address($form_state['values']['email'])) {
     form_set_error('email', t('Please enter a valid email address'));
   }
 }
 
 /**
- * Form submission handler for lockr_pantheon_register_form().
+ * Form submission handler for lockr_pantheon_admin_form().
  *
- * @see lockr_pantheon_register_form_validate()
+ * @see lockr_pantheon_admin_form_validate()
  */
-function lockr_pantheon_register_form_submit($form, &$form_state) {
+function lockr_pantheon_admin_form_submit($form, &$form_state) {
   $values = $form_state['values'];
   $next = $form_state['storage']['redirect'];
   $name = variable_get('site_name');
@@ -93,6 +93,6 @@ function lockr_pantheon_register_form_submit($form, &$form_state) {
     form_set_error('', t('An unknown error has occurred, please try again later.'));
   }
 
-  drupal_set_message(t("That's it! You're signed up with Lockr; your keys are now safe."));
+  drupal_set_message(t("That's it! You're signed up with Lockr; your keys can now be safely stored off-site."));
   $form_state['redirect'] = $next;
 }

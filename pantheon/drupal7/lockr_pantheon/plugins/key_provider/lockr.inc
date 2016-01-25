@@ -2,11 +2,11 @@
 
 $plugin = array(
   'label' => t('Lockr'),
-  'description' => t('Use the Lockr hosted key manager.'),
+  'description' => t('Use Lockr: a secure off-site hosted key manager.'),
   'storage method' => 'lockr',
   'key value' => array(
     'accepted' => TRUE,
-    'requird' => FALSE,
+    'required' => FALSE,
   ),
   'default configuration' => 'key_provider_lockr_default_configuration',
   'build configuration form' => 'key_provider_lockr_build_configuration_form',
@@ -71,14 +71,18 @@ function key_provider_lockr_get_key_value($config) {
 function key_provider_lockr_set_key_value($config, &$form_state, $key_value) {
   $name = $config['id'];
   $label = $config['label'];
-  $encoded = _lockr_pantheon_set_key($name, $key_value, $label);
-  if (!$encoded) {
+  $old_encoded = null;
+  if (isset($form_state['values']['encoded'])){
+	  $old_encoded = $form_state['values']['encoded'];
+  }
+  $new_encoded = _lockr_pantheon_set_key($name, $key_value, $label, $old_encoded);
+  if (!$new_encoded) {
     form_set_error('', t(
-      'An error occured in Lockr. Please try again later.'
+      'An error occurred in Lockr. Please try again in a moment.'
     ));
   }
   else {
-    $form_state['values']['encoded'] = $encoded;
+    $form_state['values']['encoded'] = $new_encoded;
   }
 }
 
