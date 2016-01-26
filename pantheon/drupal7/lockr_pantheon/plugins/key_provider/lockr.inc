@@ -13,7 +13,7 @@ $plugin = array(
   'get key value' => 'key_provider_lockr_get_key_value',
   'set key value' => 'key_provider_lockr_set_key_value',
   'delete key value' => 'key_provider_lockr_delete_key_value',
-  'obscure key value' => 'key_provider_lockr_key_value_obscure',
+  'obscure key value' => '_key_default_obscure_key_value',
 );
 
 /**
