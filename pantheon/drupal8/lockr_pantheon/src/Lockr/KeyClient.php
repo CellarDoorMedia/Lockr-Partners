@@ -122,9 +122,9 @@ class KeyClient
     protected function reencrypt($plaintext, $encoded)
     {
         list($cipher, $mode, $iv, $key) = $this->decode($encoded);
-
         $ciphertext = mcrypt_encrypt($cipher, $key, $plaintext, $mode, $iv);
-
+        $ciphertext = base64_encode($ciphertext);
+        $encoded = $this->encode($cipher, $mode, $iv, $key);
         return array($ciphertext, $encoded);
     }
 
