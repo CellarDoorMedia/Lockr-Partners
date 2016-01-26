@@ -94,14 +94,25 @@ function lockr_get_key($key_name, $encoded) {
  * @return bool
  * TRUE if they key set successfully, FALSE if not.
  */
-function lockr_set_key($key_name, $key_value, $key_label) {
+function lockr_set_key($key_name, $key_value, $key_label, $encoded = null) {
+  $client = \Lockr\Lockr::key()->encrypted();
   try {
-    return \Lockr\Lockr::key()->encrypted()
-      ->set($key_name, $key_value, $key_label);
+    return $client->set($key_name, $key_value, $key_label, $encoded);
+  }
+  catch (ClientException $e) {
+    $body = $e->getMessage();
+    $data = json_decode($body, TRUE);
+    if (isset($data['title']) && $data['title'] = 'Not paid') {
+      drupal_set_message(t(
+        'NOTE: Key was not set. ' .
+        'Please go to <a href="@link">Lockr</a> and add a payment method.',
+        array('@link' => 'https://lockr.io/user/add-card')
+      ), 'error');
+    }
   }
   catch (\Exception $e) {
-    return FALSE;
   }
+  return FALSE;
 }
 
 /**
