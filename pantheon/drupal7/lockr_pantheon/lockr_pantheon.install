@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * @file
+ * Install, uninstall, and update functions for lockr_pantheon.
+ */
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Delete any keys that use Lockr as the key provider.
+ */
+function lockr_pantheon_uninstall() {
+  // Load the key configurations.
+  $configs = db_query("SELECT * FROM {key_config} ORDER BY label ASC")->fetchAllAssoc('id', PDO::FETCH_ASSOC);
+
+  // Get the keys that use Lockr as the key provider.
+  $lockr_configs = array();
+  foreach ($configs as $id => $config) {
+    if ($config['key_provider'] == 'lockr') {
+      $lockr_configs[$id] = $config;
+    }
+  }
+
+  // If no keys use Lockr, don't bother to continue.
+  if (empty($lockr_configs)) {
+    return;
+  }
+
+  // Load the module and plugin.
+  drupal_load('module', 'lockr_pantheon');
+  require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'lockr_pantheon') . "/plugins/key_provider/lockr.inc";
+
+  $deleted_keys = array();
+  // Delete each Lockr key and the key value.
+  foreach ($lockr_configs as $id => $config) {
+    db_delete('key_config')
+      ->condition('id', $id)
+      ->execute();
+
+    key_provider_lockr_delete_key_value($config);
+    $deleted_keys[] = $config['label'];
+  }
+
+  drupal_set_message(t('The following Lockr keys were deleted: %keys', array('%keys' => implode(', ', $deleted_keys))), 'warning');
+}
