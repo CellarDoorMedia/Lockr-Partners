@@ -12,7 +12,7 @@
  */
 function lockr_pantheon_uninstall() {
   // Load the key configurations.
-  $configs = db_query("SELECT * FROM {key_config} WHERE key_provider = :provider", array(':provider' => 'config'))->fetchAllAssoc('id', PDO::FETCH_ASSOC);
+  $configs = db_query("SELECT * FROM {key_config} WHERE key_provider = :provider", array(':provider' => 'lockr'))->fetchAllAssoc('id', PDO::FETCH_ASSOC);
 
   // If no keys use Lockr, don't bother to continue.
   if (empty($configs)) {
