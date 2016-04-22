@@ -106,7 +106,7 @@ function lockr_command_set_key( $args, $assoc_args ) {
 	$key_name = preg_replace( '@[^a-z0-9_]+@','_', $key_name );
 	
 	$key = lockr_set_key( $key_name, $key_value, $key_label );
-	WP_CLI::line($key);
+
 	if ( $key ){
 		WP_CLI::success( $key_label . ' added to Lockr.' );
 	}
