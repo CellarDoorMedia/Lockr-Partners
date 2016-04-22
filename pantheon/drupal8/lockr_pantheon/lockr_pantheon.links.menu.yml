@@ -1,6 +1,0 @@
-lockr.register:
-  title: Lockr
-  route_name: lockr.register
-  description: Lockr registration.
-  parent: system.admin_config_system
-  weight: 40

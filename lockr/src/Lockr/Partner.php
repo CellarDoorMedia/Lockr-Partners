@@ -11,11 +11,17 @@ class Partner implements PartnerInterface
     protected $cert;
 
     /**
-     * Constucts the Pantheon partner.
+     * @var string The Lockr partner.
      */
-    public function __construct()
+    protected $partner;
+
+    /**
+     * Constucts the partner.
+     */
+    public function __construct($cert, $partner)
     {
-        $this->cert = '/srv/bindings/' . PANTHEON_BINDING . '/certs/binding.pem';
+        $this->cert = $cert;
+        $this->partner = $partner;
     }
 
     /**
@@ -33,7 +39,7 @@ class Partner implements PartnerInterface
      */
     public function getReadUri()
     {
-        return 'https://pantheon.api.lockr.io';
+        return "https://{$this->partner}.api.lockr.io";
     }
 
     /**
@@ -41,6 +47,6 @@ class Partner implements PartnerInterface
      */
     public function getWriteUri()
     {
-        return 'https://pantheon.api.lockr.io';
+        return "https://{$this->partner}.api.lockr.io";
     }
 }

@@ -1,30 +1,9 @@
 <?php
-
-/**
- * @file
- * Form callbacks for Lockr register form.
- */
- 
+	
 // Don't call the file directly and give up info!
 if ( !function_exists( 'add_action' ) ) {
 	echo 'Lock it up!';
 	exit;
-}
-
-use Lockr\Exception\ClientException;
-use Lockr\Exception\ServerException;
-
-add_action( 'admin_menu', 'lockr_admin_menu');
-add_action( 'admin_init', 'register_lockr_settings' );
-
-function lockr_admin_menu() {
-	$page_title = __('Lockr', 'lockr');
-	$menu_title = __('Lockr', 'lockr');
-	$capability = 'manage_options';
-	$menu_slug = 'lockr-site-registration';
-	$function = 'lockr_registration_form';
-	
-	add_options_page( $page_title, $menu_title, $capability, $menu_slug, $function );
 }
 
 function register_lockr_settings() {
@@ -60,11 +39,11 @@ function lockr_options_validate($input) {
   }
   else {
 	  try {
-    	\Lockr\Lockr::site()->register($options['account_email'], null, $name);
+    	lockr_site_client()->register($options['account_email'], null, $name);
 	  }
 	  catch (ClientException $e) {
 		  try {
-				\Lockr\Lockr::site()->register($options['account_email'], $options['account_password'], $name);
+				lockr_site_client()->register($options['account_email'], $options['account_password'], $name);
 		  }
 		  catch (ClientException $e) {
 			  add_settings_error('lockr_options', 'lockr-email', 'Login credentials incorrect, please try again.', 'error');

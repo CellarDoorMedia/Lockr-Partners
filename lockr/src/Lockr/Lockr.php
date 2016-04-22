@@ -58,10 +58,14 @@ class Lockr
      *
      * @return static The partner instance.
      */
-    public static function create()
+    public static function create(PartnerInterface $partner = null)
     {
         if (null == static::$instance) {
-            static::$instance = new static(new Partner());
+            if ($partner !== null) {
+                static::$instance = new static($partner);
+            } else {
+                static::$instance = new static(new Partner());
+            }
         }
 
         return static::$instance;
