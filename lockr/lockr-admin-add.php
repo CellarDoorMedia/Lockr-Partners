@@ -1,14 +1,13 @@
 <?php
 
 // Don't call the file directly and give up info!
-if ( !function_exists( 'add_action' ) ) {
+if ( ! function_exists( 'add_action' ) ) {
 	echo 'Lock it up!';
 	exit;
 }
 
 function lockr_admin_submit_add_key() {
-	
-	if ( !current_user_can( 'manage_options' ) ){
+	if ( !current_user_can( 'manage_options' ) ) {
 		wp_die( 'You are not allowed to add a key.' );
 	}
 	
@@ -22,16 +21,14 @@ function lockr_admin_submit_add_key() {
 	
 	$key_store = lockr_set_key( $key_name, $key_value, $key_label );
 	
-	if ( $key_store != false ){
-		//Successfully Added
-		wp_redirect(  admin_url( 'admin.php?page=lockr&message=success' ) );
+	if ( $key_store != false ) {
+		// Successfully Added
+		wp_redirect( admin_url( 'admin.php?page=lockr&message=success' ) );
 		exit;
-	}
-	else{
-		//Failed Addition
-		wp_redirect(  admin_url( 'admin.php?page=lockr-add-key&message=failed' ) );
+	} else {
+		// Failed Addition
+		wp_redirect( admin_url( 'admin.php?page=lockr-add-key&message=failed' ) );
 		exit;
-	 
 	}
 }
 

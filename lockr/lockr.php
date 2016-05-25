@@ -14,7 +14,7 @@ Text Domain: lockr
 */
 
 // Don't call the file directly and give up info!
-if ( !function_exists( 'add_action' ) ) {
+if ( ! function_exists( 'add_action' ) ) {
 	echo 'Lock it up!';
 	exit;
 }
@@ -27,7 +27,7 @@ define( 'LOCKR__PLUGIN_URL', plugin_dir_url( __FILE__ ) );
  * Create database table for keys in the system.
  */
 
-register_activation_hook(__FILE__, 'lockr_install');
+register_activation_hook( __FILE__, 'lockr_install' );
 
 /**
  * @file
@@ -66,7 +66,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 global $lockr_db_version;
 $lockr_db_version = '1.0';
 
-function lockr_install(){
+function lockr_install() {
 	global $wpdb;
 	global $lockr_db_version;
 	
@@ -84,9 +84,9 @@ function lockr_install(){
 	) $charset_collate;";
 	
 	require_once ( ABSPATH . 'wp-admin/includes/upgrade.php' );
-	dbDelta($sql);
+	dbDelta( $sql );
 	
-	add_option( 'lockr_db_version', $lockr_db_version);
+	add_option( 'lockr_db_version', $lockr_db_version );
 	
 }
 
@@ -94,65 +94,62 @@ function lockr_install(){
  * Returns the detected partner, if available.
  */
 function lockr_get_partner() {
-  if (defined('PANTHEON_BINDING')) {
-    return array(
-      'name' => 'pantheon',
-      'title' => __('Pantheon'),
-      'description' => __('Our system has detected that your website is hosted on one of our supported providers, no additional configuration is necessary.'),
-      'cert' => '/srv/bindings/' . PANTHEON_BINDING . '/certs/binding.pem',
-    );
-  }
+	if ( defined('PANTHEON_BINDING') ) {
+		return array(
+			'name' => 'pantheon',
+			'title' => __( 'Pantheon' ),
+			'description' => __( 'Our system has detected that your website is hosted on one of our supported providers, no additional configuration is necessary.' ),
+			'cert' => '/srv/bindings/' . PANTHEON_BINDING . '/certs/binding.pem',
+		);
+  	}
 
-  return null;
+	return null;
 }
 
 /**
  * Returns the Lockr site client.
  */
 function lockr_site_client() {
+	$base_client = lockr_client();
 
-  $base_client = lockr_client();
+	if ( $base_client === false ) {
+		return false;
+	}
 
-  if ($base_client === false) {
-    return false;
-  }
+	$client = new SiteClient( $base_client );
 
-  $client = new SiteClient($base_client);
-
-  return $client;
+	return $client;
 }
 
 /**
  * Returns the Lockr key client.
  */
 function lockr_key_client() {
+	$base_client = lockr_client();
 
-  $base_client = lockr_client();
+	if ( $base_client === false ) {
+		return false;
+	}
 
-  if ($base_client === false) {
-    return false;
-  }
+	$client = new KeyClient( $base_client );
 
-  $client = new KeyClient($base_client);
-
-  return $client;
+	return $client;
 }
 
 /**
  * Returns the Lockr client for this site.
  */
 function lockr_client() {
+	$partner = get_option( 'lockr_partner' );
+	$cert = get_option( 'lockr_cert' );
 
-  $partner = get_option('lockr_partner');
-  $cert = get_option('lockr_cert');
+	if ( ! $partner || ! $cert ) {
+		return false;
+	}
 
-  if ( !$partner || !$cert ) {
-    return false;
-  }
+	$client = Lockr::create( new Partner( $cert, $partner ) );
 
-  $client = Lockr::create(new Partner($cert, $partner));
-
-  return $client;
+	return $client;
 }
 
 /**
@@ -162,21 +159,18 @@ function lockr_client() {
  * true if this site is registered, false if not.
  */
 function lockr_check_registration() {
-  $client = lockr_site_client();
-  try {
-    if ( $client ) {
-      return $client->exists();
-    }
-    else {
-      return false;
-    }
-  }
-  catch (ServerException $e) {
-    return false;
-  }
-  catch (ClientException $e) {
-    return false;
-  }
+	$client = lockr_site_client();
+	try {
+		if ( $client ) {
+			return $client->exists();
+		} else {
+			return false;
+		}
+	} catch ( ServerException $e ) {
+		return false;
+	} catch ( ClientException $e ) {
+		return false;
+	}
 }
 
 /**
@@ -189,10 +183,9 @@ function lockr_check_registration() {
  * Returns the key value, or false on failure.
  */
 function lockr_get_key( $key_name ) {
-	
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'lockr_keys';
-	$query = $wpdb->prepare("SELECT * FROM $table_name WHERE key_name = '%s'", array( $key_name ));
+	$query = $wpdb->prepare( "SELECT * FROM $table_name WHERE key_name = '%s'", array( $key_name ) );
 	$key_store = $wpdb->get_results( $query );
 	
 	if ( $key_store == null ) {
@@ -203,17 +196,15 @@ function lockr_get_key( $key_name ) {
 	
 	$client = lockr_key_client();
 	
-  try {
-	  if( $client ){
-		  return $client->encrypted($encoded)->get($key_name);
-	  }
-	  else {
-		  return false;
-	  }
-  }
-  catch (\Exception $e) {
-    return false;
-  }
+	try {
+		if( $client ) {
+		return $client->encrypted( $encoded )->get( $key_name );
+		} else {
+			return false;
+		}
+	} catch (\Exception $e) {
+		return false;
+	}
 }
 
 /**
@@ -232,62 +223,57 @@ function lockr_get_key( $key_name ) {
  * true if they key set successfully, false if not.
  */
 function lockr_set_key( $key_name, $key_value, $key_label ) {
-	
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'lockr_keys';
 	$key_abstract = '**************' . substr($key_value, -4);
 	$query = $wpdb->prepare( "SELECT * FROM $table_name WHERE key_name = '%s'", array( $key_name ) );
 	$key_exists = $wpdb->get_results( $query );
-	if ( empty( $key_exists ) ){
+	if ( empty( $key_exists ) ) {
 		$key_exists = null;
 		$encoded = null;
-	}
-	else {
+	} else {
 		$encoded = $key_exists[0]->key_value;
 	}
 	
 	$client = lockr_key_client();
-	
-  if ( $client === false ) {
-    return false;
-  }
-  $client = $client->encrypted();
-  
-  try {
-    $key_remote = $client->set( $key_name, $key_value, $key_label, $encoded );
-  }
-  catch ( ClientException $e ) {
-    $body = $e->getMessage();
-    $data = json_decode($body, true);
-    if ( isset( $data['title']) && $data['title'] = 'Not paid' ) {
-      return 'NOTE: Key was not set. Please go to <a href="https://lockr.io/">Lockr</a> and add a payment method to your account.';
-    }
-  }
-  catch (\Exception $e) {
-	  return false;
-  }
-  
-  if ( $key_remote != false ) {
-		//Setup our storage array
-	  $key_data = array(
-	    'time' => date( "Y-m-d H:i:s" ),
-	    'key_name' => $key_name,
-	    'key_label' => $key_label,
-	    'key_value' => $key_remote,
-	    'key_abstract' => $key_abstract,
-	  );
-	  
-	  if ( !empty( $key_exists ) ) {
-	    $key_id = array('id' => $key_exists[0]->id);
-	    $key_store = $wpdb->update( $table_name, $key_data, $key_id );
-	  }
-	  else {
-	    $key_store = $wpdb->insert( $table_name, $key_data );
-	  }
-	  
-	  return $key_store;
+
+	if ( $client === false ) {
+		return false;
 	}
-	else {
+	$client = $client->encrypted();
+
+	try {
+		$key_remote = $client->set( $key_name, $key_value, $key_label, $encoded );
+	} catch ( ClientException $e ) {
+		$body = $e->getMessage();
+		$data = json_decode($body, true);
+		if ( isset( $data['title']) && $data['title'] = 'Not paid' ) {
+			return 'NOTE: Key was not set. Please go to <a href="https://lockr.io/">Lockr</a> and add a payment method to your account.';
+		}
+	}
+	catch (\Exception $e) {
+		return false;
+	}
+
+	if ( $key_remote != false ) {
+		// Setup our storage array
+		$key_data = array(
+			'time' => date( "Y-m-d H:i:s" ),
+			'key_name' => $key_name,
+			'key_label' => $key_label,
+			'key_value' => $key_remote,
+			'key_abstract' => $key_abstract,
+		);
+
+		if ( ! empty( $key_exists ) ) {
+			$key_id = array('id' => $key_exists[0]->id);
+			$key_store = $wpdb->update( $table_name, $key_data, $key_id );
+		} else {
+			$key_store = $wpdb->insert( $table_name, $key_data );
+		}
+
+		return $key_store;
+	} else {
 		return false;
 	}
 }
@@ -299,20 +285,18 @@ function lockr_set_key( $key_name, $key_value, $key_label ) {
  * The key name
  */
 function lockr_delete_key( $key_name ) {
-	
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'lockr_keys';
-	
+
 	$key_store = array( 'key_name' => $key_name );
 	$key_delete = $wpdb->delete( $table_name, $key_store );
-	if ( !empty( $key_delete ) ) {
-		  $client = lockr_key_client();
-	  if ( $client ) {
-	    $client->delete($key_name);
-	    return true;
-	  }
-	}
-	else {
+	if ( ! empty( $key_delete ) ) {
+		$client = lockr_key_client();
+		if ( $client ) {
+			$client->delete($key_name);
+			return true;
+		}
+	} else {
 		return false;
 	}
 }

@@ -1,14 +1,13 @@
 <?php
 
 // Don't call the file directly and give up info!
-if ( !function_exists( 'add_action' ) ) {
+if ( ! function_exists( 'add_action' ) ) {
 	echo 'Lock it up!';
 	exit;
 }
 
 function lockr_admin_submit_edit_key() {
-	
-	if ( !current_user_can( 'manage_options' ) ){
+	if ( !current_user_can( 'manage_options' ) ) {
 		wp_die( 'You are not allowed to edit a key.' );
 	}
 
@@ -20,16 +19,14 @@ function lockr_admin_submit_edit_key() {
 
 	$key_store = lockr_set_key( $key_name, $key_value, $key_label );
 
-	if ( $key_store != false ){
-		//Successfully Added
-		wp_redirect(  admin_url( 'admin.php?page=lockr&message=editsuccess' ) );
+	if ( $key_store != false ) {
+		// Successfully Added
+		wp_redirect( admin_url( 'admin.php?page=lockr&message=editsuccess' ) );
 		exit;
-	}
-	else{
-		//Failed Addition
-		wp_redirect(  admin_url( 'admin.php?page=lockr-edit-key&key=' . $key_name . '&message=failed' ) );
+	} else {
+		// Failed Addition
+		wp_redirect( admin_url( 'admin.php?page=lockr-edit-key&key=' . $key_name . '&message=failed' ) );
 		exit;
-	 
 	}
 }
 
@@ -45,7 +42,7 @@ function lockr_edit_form() {
 	?>
 <script type="text/javascript" src="<?php print $js_url; ?>"></script>
 <div class="wrap">
-	<?php if ( !$exists ): ?>
+	<?php if ( ! $exists ): ?>
 		<h1>Register Lockr First</h1>
 		<p>Before you can add keys, you must first register your site with Lockr. Head to <a href="<?php admin_url( 'admin.php?page=lockr-site-registration' ); ?>"
 	<?php else: ?>
