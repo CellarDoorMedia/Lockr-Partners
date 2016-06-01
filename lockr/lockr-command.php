@@ -106,3 +106,95 @@ function lockr_command_set_key( $args, $assoc_args ) {
 }
 
 WP_CLI::add_command( 'lockr set key', 'lockr_command_set_key' );
+
+/**
+ * Apply patches to plugins for Lockr.
+ */
+function lockr_command_lockdown( $args, $assoc_args ) {
+	$raw_path = 'https://raw.githubusercontent.com/CellarDoorMedia/Lockr-Patches/wp';
+
+	$reg_file = "{$raw_path}/registry.json";
+	WP_CLI::log( "Downloading registry file: {$reg_file}." );
+	$registry = file_get_contents( $reg_file );
+	$registry = json_decode( $registry, true );
+
+	if ( json_last_error() !== JSON_ERROR_NONE ) {
+		WP_CLI::error( 'There was an error downloading the patch registry.' );
+	}
+
+	$names = implode( ', ', array_keys( $registry ) );
+	WP_CLI::log( "Patches available for: {$names}." );
+
+	$plugin_dir = WP_PLUGIN_DIR;
+	$plugins = get_plugins();
+
+	foreach ( $registry as $name => $patches ) {
+		// I guess we'll just assume that all plugin files have this form?
+		// Not sure if there is a better way.
+		if ( ! isset( $plugins[ "{$name}/{$name}.php" ] ) ) {
+			WP_CLI::log("Plugin not found: {$name}.");
+			continue;
+		}
+
+		$plugin_version = $plugins["{$name}/{$name}.php"]['Version'];
+		if ( ! in_array( $plugin_version, array_keys( $patches ) ) ) {
+			WP_CLI::log("Plugin version not supported: {$name} ({$plugin_version}).");
+			continue;
+		}
+
+		$path = $patches[$plugin_version];
+
+		$plugin_path = "{$plugin_dir}/{$name}";
+
+		if ( ! is_dir( $plugin_path ) ) {
+			WP_CLI::log("Plugin path does not exist: {$plugin_path}.");
+			continue;
+		}
+
+		// The lockfile prevents double-patching a plugin if lockdown is
+		// called more than once. Applying a patch more than once can be
+		// disastrous, and we don't want that.
+		$lockfile = "{$plugin_path}/.lockr-patched";
+		if ( is_file( $lockfile ) ) {
+			WP_CLI::log( "{$name} already patched." );
+			WP_CLI::log( "Remove {$lockfile} to patch again." );
+			WP_CLI::log( "Do so at your own peril." );
+			continue;
+		}
+
+		$patch_path = "{$plugin_path}/key-integration.patch";
+		$patch_remote = "{$raw_path}/{$path}";
+		WP_CLI::log( "Downloading {$patch_remote}." );
+		copy( $patch_remote, $patch_path );
+
+		WP_CLI::log( "Patching {$name}." );
+		$cmd = implode( ' ', array(
+			'patch',
+			// We do not need a backup because reverting the patch can be done
+			// via the user's version control system.
+			'--no-backup-if-mismatch',
+			'-N',
+			'-p1',
+			'-d', escapeshellarg( $plugin_path ),
+			'<', escapeshellarg( $patch_path ),
+		) );
+		WP_CLI::log( "Running `{$cmd}`." );
+		ob_start();
+		passthru( $cmd, $return_code );
+		WP_CLI::log( ob_get_clean() );
+
+		if ( $return_code === 0 ) {
+			// Patch is OK, go ahead and write the lockfile and remove the
+			// downloaded patch.
+			WP_CLI::log( "Patch successful, writing lockfile." );
+			file_put_contents( $lockfile, '' );
+			unlink( $patch_path );
+		} else {
+			WP_CLI::error( "Failed to patch {$name}.", false );
+			WP_CLI::error( "Patch file left at '{$patch_path}'.", false );
+		}
+	}
+}
+
+WP_CLI::add_command( 'lockr lockdown', 'lockr_command_lockdown' );
+
