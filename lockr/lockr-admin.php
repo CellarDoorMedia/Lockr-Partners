@@ -134,7 +134,7 @@ class Key_List extends WP_List_Table {
 
 		// How many pages do we have in total?
 		$totalpages = ceil( $totalitems / $perpage );
-		/ /Adjust the query to take pagination into account
+		// Adjust the query to take pagination into account
 		if ( ! empty( $paged ) && ! empty( $perpage ) ) {
 			$offset = ($paged - 1) * $perpage;
 			$query .= $wpdb->prepare( ' LIMIT %d,%d', array( (int) $offset, (int) $perpage ) );
