@@ -300,3 +300,36 @@ function lockr_delete_key( $key_name ) {
 		return false;
 	}
 }
+
+/**
+ * Performs a generic option-override.
+ */
+function lockr_override_option( $option_name, $key_name, $key_desc ) {
+	$option_value = get_option( $option_name );
+
+	if ( $option_value == '' || substr( $option_value, 0, 5 ) == 'lockr' ) {
+		return;
+	}
+
+	if ( lockr_set_key( $key_name, $option_value, $key_desc ) ) {
+		update_option( $option_name, $key_name );
+	}
+}
+
+/**
+ * Gets a possibly overridden option value.
+ */
+function lockr_get_override_value( $option_name ) {
+	$option_value = get_option( $option_name );
+
+	if ( substr ( $option_value, 0, 5 ) != 'lockr' ) {
+		return $option_value;
+	}
+
+	$lockr_key = lockr_get_key( $option_value );
+	if ( $lockr_key ) {
+		return $lockr_key;
+	}
+
+	return $option_value;
+}
