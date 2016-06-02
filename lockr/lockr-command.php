@@ -129,25 +129,23 @@ function lockr_command_lockdown( $args, $assoc_args ) {
 	$plugins = get_plugins();
 
 	foreach ( $registry as $name => $patches ) {
-		// I guess we'll just assume that all plugin files have this form?
-		// Not sure if there is a better way.
-		if ( ! isset( $plugins[ "{$name}/{$name}.php" ] ) ) {
-			WP_CLI::log("Plugin not found: {$name}.");
+		if ( ! isset( $plugins[$name] ) ) {
+			WP_CLI::log( "Plugin not found: {$name}." );
 			continue;
 		}
 
-		$plugin_version = $plugins["{$name}/{$name}.php"]['Version'];
+		$plugin_version = $plugins[$name]['Version'];
 		if ( ! in_array( $plugin_version, array_keys( $patches ) ) ) {
-			WP_CLI::log("Plugin version not supported: {$name} ({$plugin_version}).");
+			WP_CLI::log( "Plugin version not supported: {$name} ({$plugin_version})." );
 			continue;
 		}
 
 		$path = $patches[$plugin_version];
 
-		$plugin_path = "{$plugin_dir}/{$name}";
+		$plugin_path = dirname( "{$plugin_dir}/{$name}" );
 
 		if ( ! is_dir( $plugin_path ) ) {
-			WP_CLI::log("Plugin path does not exist: {$plugin_path}.");
+			WP_CLI::log( "Plugin path does not exist: {$plugin_path}." );
 			continue;
 		}
 
