@@ -258,7 +258,7 @@ function lockr_set_key( $key_name, $key_value, $key_label ) {
 	} catch ( ClientException $e ) {
 		$body = $e->getMessage();
 		$data = json_decode($body, true);
-		if ( isset( $data['title']) && $data['title'] = 'Not paid' ) {
+		if ( isset( $data['title']) && $data['title'] === 'Not paid' ) {
 			return 'NOTE: Key was not set. Please go to <a href="https://lockr.io/">Lockr</a> and add a payment method to your account.';
 		}
 	}
