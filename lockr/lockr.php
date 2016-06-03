@@ -147,6 +147,17 @@ function lockr_client() {
 		return false;
 	}
 
+	if ($partner !== 'custom') {
+		$partner_info = lockr_get_partner();
+
+		if ( ! $partner_info ) {
+			return false;
+		}
+
+		$partner = $partner_info['name'];
+		$cert = $partner_info['cert'];
+	}
+
 	$client = Lockr::create( new Partner( $cert, $partner ) );
 
 	return $client;
