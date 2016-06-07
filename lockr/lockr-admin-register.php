@@ -1,5 +1,8 @@
 <?php
 
+use Lockr\Exception\ClientException;
+use Lockr\Exception\ServerException;
+
 // Don't call the file directly and give up info!
 if ( ! function_exists( 'add_action' ) ) {
 	echo 'Lock it up!';
@@ -86,7 +89,7 @@ function lockr_account_email_input() {
 function lockr_partner_name_input() {
 ?>
 <input id="lockr_partner_name"
-       name="lockr_partner_name"
+       name="lockr_options[partner_name]"
        size="60"
 	   type="text" />
 <?php
@@ -117,10 +120,7 @@ function lockr_options_validate($input) {
 
 	$cert_path = trim( $input['lockr_cert_path'] );
 
-	if ( ! $cert_path ) {
-		update_option( 'lockr_partner', '' );
-		update_option( 'lockr_cert', '' );
-	} else {
+	if ( $cert_path ) {
 		if ( $cert_path[0] !== '/' ) {
 			$cert_path = ABSPATH . $cert_path;
 		}
@@ -137,6 +137,16 @@ function lockr_options_validate($input) {
 
 		update_option( 'lockr_partner', 'custom' );
 		update_option( 'lockr_cert', $cert_path );
+	} else {
+		$partner = lockr_get_partner();
+
+		if ( $partner ) {
+			update_option( 'lockr_partner', $partner['name'] );
+			update_option( 'lockr_cert', $partner['cert'] );
+		} else {
+			update_option( 'lockr_partner', '' );
+			update_option( 'lockr_cert', '' );
+		}
 	}
 
 	$options['account_email'] = trim( $input['account_email'] );
@@ -148,12 +158,13 @@ function lockr_options_validate($input) {
 			CURLOPT_POST => TRUE,
 			CURLOPT_POSTFIELDS => array(
 				'email' => $options['account_email'],
-				'partner' => trim( $input['lockr_partner'] ),
+				'partner' => trim( $input['partner_name'] ),
 			),
 		));
 		curl_exec($ch);
 		update_option( 'lockr_requested', true );
-		return $options;
+		wp_redirect( admin_url( 'admin.php?page=lockr-site-registration' ) );
+		exit;
 	}
 
 	$name = get_bloginfo( 'name', 'display' );
@@ -162,22 +173,26 @@ function lockr_options_validate($input) {
 		add_settings_error( 'lockr_options', 'lockr-email', $options['account_email'] . ' is not a proper email address. Please try again.', 'error' );
 		$options['account_email'] = '';
 	} else {
-		try {
-			lockr_site_client()->register( $options['account_email'], null, $name );
-		} catch ( ClientException $e ) {
-			if ( ! $options['account_password'] ) {
-				wp_redirect( admin_url( 'admin.php?page=lockr-site-registration&p' ) );
-				exit;
-			}
+		// I guess this form double-posts? Seems like Wordpress weirdness.
+		list( $exists ) = lockr_check_registration();
+		if ( ! $exists ) {
 			try {
-				lockr_site_client()->register( $options['account_email'], $options['account_password'], $name );
+				lockr_site_client()->register( $options['account_email'], null, $name );
 			} catch ( ClientException $e ) {
-				add_settings_error( 'lockr_options', 'lockr-email', 'Login credentials incorrect, please try again.', 'error' );
+				if ( ! $options['account_password'] ) {
+					wp_redirect( admin_url( 'admin.php?page=lockr-site-registration&p' ) );
+					exit;
+				}
+				try {
+					lockr_site_client()->register( $options['account_email'], $options['account_password'], $name );
+				} catch ( ClientException $e ) {
+					add_settings_error( 'lockr_options', 'lockr-email', 'Login credentials incorrect, please try again.', 'error' );
+				} catch ( ServerException $e ) {
+					add_settings_error( 'lockr_options', 'lockr-email', 'An unknown error has occurred, please try again later.', 'error' );
+				}
 			} catch ( ServerException $e ) {
 				add_settings_error( 'lockr_options', 'lockr-email', 'An unknown error has occurred, please try again later.', 'error' );
 			}
-		} catch ( ServerException $e ) {
-			add_settings_error( 'lockr_options', 'lockr-email', 'An unknown error has occurred, please try again later.', 'error' );
 		}
 	}
 	$options['account_password'] = '';
