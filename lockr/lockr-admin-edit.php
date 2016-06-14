@@ -44,7 +44,7 @@ function lockr_edit_form() {
 <div class="wrap">
 	<?php if ( ! $exists ): ?>
 		<h1>Register Lockr First</h1>
-		<p>Before you can add keys, you must first register your site with Lockr. Head to <a href="<?php admin_url( 'admin.php?page=lockr-site-registration' ); ?>"
+		<p>Before you can add keys, you must first <a href="<?php echo admin_url( 'admin.php?page=lockr-site-registration' ); ?>">register your site</a> with Lockr.</p>
 	<?php else: ?>
 		<h1>Edit <?php print $key->key_label; ?> Key in Lockr</h1>
 			<?php if ( isset( $_GET['message'] ) && $_GET['message'] == 'failed' ): ?>
