@@ -224,7 +224,7 @@ function lockr_registration_form() {
 				</table>
 			<?php endif; ?>
 		<?php else: ?>
-			<p>Our system has detected that your website is hosted on one of our supported providers, no additional configuration is necessary.</p>
+			<p>Our system has detected that your website is hosted on one of our supported providers, enter your email address to register.</p>
 			<table class="form-table">
 			<?php do_settings_fields( 'lockr', 'lockr_email' ); ?>
 			</table>
