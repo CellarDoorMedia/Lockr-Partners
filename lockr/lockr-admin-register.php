@@ -180,6 +180,7 @@ function lockr_options_validate($input) {
 				lockr_site_client()->register( $options['account_email'], null, $name );
 			} catch ( ClientException $e ) {
 				if ( ! $options['account_password'] ) {
+					update_option( 'lockr_options', $options );
 					wp_redirect( admin_url( 'admin.php?page=lockr-site-registration&p' ) );
 					exit;
 				}
