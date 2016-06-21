@@ -185,6 +185,112 @@ function lockr_check_registration() {
 }
 
 /**
+ * Encrypt plaintext using a key from Lockr.
+ *
+ * @param string $key_name The key name in Lockr.
+ * @param string $plaintext The plaintext to be encrypted.
+ *
+ * @return string|null
+ *   The encrypted and encoded ciphertext or null if encryption fails.
+ */
+function lockr_encrypt( $key_name, $plaintext ) {
+	$cipher = MCRYPT_RIJNDAEL_256;
+	$mode = MCRYPT_MODE_CBC;
+
+	$key = lockr_get_key( $key_name );
+	if ( ! $key ) {
+		return null;
+	}
+
+	$iv_len = mcrypt_get_iv_size( $cipher, $mode );
+	$iv = mcrypt_create_iv( $iv_len );
+
+	$ciphertext = mcrypt_encrypt( $cipher, $key, $plaintext, $mode, $iv );
+	if ( $ciphertext === false ) {
+		return null;
+	}
+
+	$iv = base64_encode( $iv );
+	if ( $iv === false ) {
+		return null;
+	}
+
+	$ciphertext = base64_encode( $ciphertext );
+	if ( $ciphertext === false ) {
+		return null;
+	}
+
+	$parts = array(
+		'cipher'     => $cipher,
+		'mode'       => $mode,
+		'key_name'   => $key_name,
+		'iv'         => $iv,
+		'ciphertext' => $ciphertext,
+	);
+	$encoded = json_encode( $parts );
+	if ( json_last_error() !== JSON_ERROR_NONE ) {
+		return null;
+	}
+
+	return $encoded;
+}
+
+/**
+ * Decrypt ciphertext using a key from Lockr.
+ *
+ * @param string $encoded The encrypted and encoded ciphertext.
+ *
+ * @return string|null The plaintext or null if decryption fails.
+ */
+function lockr_decrypt( $encoded ) {
+	$parts = json_decode( $encoded, true );
+	if ( json_last_error() !== JSON_ERROR_NONE ) {
+		return null;
+	}
+
+	if ( ! isset( $parts['cipher'] ) ) {
+		return null;
+	}
+	$cipher = $parts['cipher'];
+
+	if ( ! isset( $parts['mode'] ) ) {
+		return null;
+	}
+	$mode = $parts['mode'];
+
+	if ( ! isset( $parts['key_name'] ) ) {
+		return null;
+	}
+	$key = lockr_get_key( $parts['key_name'] );
+	if ( ! $key ) {
+		return null;
+	}
+
+	if ( ! isset( $parts['iv'] ) ) {
+		return null;
+	}
+	$iv = base64_decode( $parts['iv'] );
+	if ( $iv === false ) {
+		return null;
+	}
+
+	if ( ! isset( $parts['ciphertext'] ) ) {
+		return null;
+	}
+	$ciphertext = base64_decode( $parts['ciphertext'] );
+	if ( $ciphertext === false ) {
+		return null;
+	}
+
+	$plaintext = mcrypt_decrypt( $cipher, $key, $ciphertext, $mode, $iv );
+	if ( $plaintext === false ) {
+		return null;
+	}
+
+	return trim( $plaintext );
+}
+
+/**
  * Gets a key from Lockr.
  *
  * @param string $key_name
