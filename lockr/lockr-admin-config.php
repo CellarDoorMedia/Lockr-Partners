@@ -83,7 +83,11 @@ function lockr_register_text() {
 
 function lockr_account_email_input() {
 	$options = get_option( 'lockr_options' );
-	echo  "<input id='lockr_account_email' name='lockr_options[account_email]' size='60' type='email' value='{$options['account_email']}' />";
+	if( isset( $options['account_email'] ) ){
+		echo  "<input id='lockr_account_email' name='lockr_options[account_email]' size='60' type='email' value='{$options['account_email']}' />";
+	} else{
+		echo  "<input id='lockr_account_email' name='lockr_options[account_email]' size='60' type='email' value='' />";
+	}
 }
 
 function lockr_partner_name_input() {
@@ -117,95 +121,104 @@ function lockr_account_password_input() {
 
 function lockr_options_validate($input) {
 	$options = get_option( 'lockr_options' );
+	if ( array_key_exists( 'lockr_cert_path', $input ) ){
+		$cert_path = trim( $input['lockr_cert_path'] );
 
-	$cert_path = trim( $input['lockr_cert_path'] );
-
-	if ( $cert_path ) {
-		if ( $cert_path[0] !== '/' ) {
-			$cert_path = ABSPATH . $cert_path;
-		}
-
-		if ( ! is_readable($cert_path) ) {
-			add_settings_error(
-				'lockr_options',
-				'lockr-cert-path',
-				"{$cert_path} must be a readable file."
-			);
-
-			return $options;
-		}
-
-		update_option( 'lockr_partner', 'custom' );
-		update_option( 'lockr_cert', $cert_path );
-	} else {
-		$partner = lockr_get_partner();
-
-		if ( $partner ) {
-			update_option( 'lockr_partner', $partner['name'] );
-			update_option( 'lockr_cert', $partner['cert'] );
+		if ( $cert_path ) {
+			if ( $cert_path[0] !== '/' ) {
+				$cert_path = ABSPATH . $cert_path;
+			}
+				
+			if ( ! is_readable($cert_path) ) {
+				add_settings_error(
+					'lockr_options',
+					'lockr-cert-path',
+					"{$cert_path} must be a readable file."
+				);
+	
+				return $options;
+			}
+		
+			update_option( 'lockr_partner', 'custom' );
+			update_option( 'lockr_cert', $cert_path );
 		} else {
-			update_option( 'lockr_partner', '' );
-			update_option( 'lockr_cert', '' );
+			$partner = lockr_get_partner();
+			if ( $partner ) {
+				update_option( 'lockr_partner', $partner['name'] );
+				update_option( 'lockr_cert', $partner['cert'] );
+			} else {
+				update_option( 'lockr_partner', '' );
+				update_option( 'lockr_cert', '' );
+			}
 		}
-	}
-
-	$options['account_email'] = trim( $input['account_email'] );
-	$options['account_password'] = trim( $input['account_password'] );
-
-	if ( ! get_option( 'lockr_cert' ) && ! get_option( 'lockr_requested' ) ) {
-		$ch = curl_init('https://lockr.io/api/v2/request-certificate');
-		curl_setopt_array($ch, array(
-			CURLOPT_POST => TRUE,
-			CURLOPT_POSTFIELDS => array(
-				'email' => $options['account_email'],
-				'partner' => trim( $input['partner_name'] ),
-			),
-		));
-		curl_exec($ch);
-		update_option( 'lockr_requested', true );
-		wp_redirect( admin_url( 'admin.php?page=lockr-site-registration' ) );
-		exit;
-	}
-
-	$name = get_bloginfo( 'name', 'display' );
-
-	if ( ! filter_var( $options['account_email'], FILTER_VALIDATE_EMAIL ) ) {
-		add_settings_error( 'lockr_options', 'lockr-email', $options['account_email'] . ' is not a proper email address. Please try again.', 'error' );
-		$options['account_email'] = '';
 	} else {
-		// I guess this form double-posts? Seems like Wordpress weirdness.
-		list( $exists ) = lockr_check_registration();
-		if ( ! $exists ) {
-			try {
-				lockr_site_client()->register( $options['account_email'], null, $name );
-			} catch ( ClientException $e ) {
-				if ( ! $options['account_password'] ) {
-					update_option( 'lockr_options', $options );
-					wp_redirect( admin_url( 'admin.php?page=lockr-site-registration&p' ) );
-					exit;
-				}
+		$options['account_email'] = trim( $input['account_email'] );
+		if( isset( $input['account_password'] ) ){
+			$options['account_password'] = trim( $input['account_password'] );
+		} else{
+			$options['account_password'] = '';
+		}
+	
+		if ( ! get_option( 'lockr_cert' ) && ! get_option( 'lockr_requested' ) ) {
+			$ch = curl_init('https://lockr.io/api/v2/request-certificate');
+			curl_setopt_array($ch, array(
+				CURLOPT_POST => TRUE,
+				CURLOPT_POSTFIELDS => array(
+					'email' => $options['account_email'],
+					'partner' => trim( $input['partner_name'] ),
+				),
+			));
+			curl_exec($ch);
+			update_option( 'lockr_requested', true );
+			wp_redirect( admin_url( 'admin.php?page=lockr-site-registration' ) );
+			exit;
+		}
+	
+		$name = get_bloginfo( 'name', 'display' );
+	
+		if ( ! filter_var( $options['account_email'], FILTER_VALIDATE_EMAIL ) ) {
+			add_settings_error( 'lockr_options', 'lockr-email', $options['account_email'] . ' is not a proper email address. Please try again.', 'error' );
+			$options['account_email'] = '';
+		} else {
+			// I guess this form double-posts? Seems like Wordpress weirdness.
+			list( $exists ) = lockr_check_registration();
+			if ( ! $exists ) {
 				try {
-					lockr_site_client()->register( $options['account_email'], $options['account_password'], $name );
+					lockr_site_client()->register( $options['account_email'], null, $name );
 				} catch ( ClientException $e ) {
-					add_settings_error( 'lockr_options', 'lockr-email', 'Login credentials incorrect, please try again.', 'error' );
+					if ( ! $options['account_password'] ) {
+						add_settings_error( 'lockr_options', 'lockr-password', 'Please enter your password to add this site to your Lockr account.', 'error' );
+						return $options;
+					}
+					try {
+						lockr_site_client()->register( $options['account_email'], $options['account_password'], $name );
+					} catch ( ClientException $e ) {
+						add_settings_error( 'lockr_options', 'lockr-email', 'Login credentials incorrect, please try again.', 'error' );
+					} catch ( ServerException $e ) {
+						add_settings_error( 'lockr_options', 'lockr-email', 'An unknown error has occurred, please try again later.', 'error' );
+					}
 				} catch ( ServerException $e ) {
 					add_settings_error( 'lockr_options', 'lockr-email', 'An unknown error has occurred, please try again later.', 'error' );
 				}
-			} catch ( ServerException $e ) {
-				add_settings_error( 'lockr_options', 'lockr-email', 'An unknown error has occurred, please try again later.', 'error' );
 			}
 		}
+		$options['account_password'] = '';
+		return $options;	
 	}
-	$options['account_password'] = '';
-	return $options;
 }
 
-function lockr_registration_form() {
+function lockr_configuration_form() {
 	list( $exists ) = lockr_check_registration();
 	$partner_info = lockr_get_partner();
+	$errors = (get_settings_errors());
+	$error_codes = array();
+	foreach( $errors as $error ){
+		$error_codes[] = $error['code'];
+	}
 	?>
 <div class="wrap">
 	<h1>Lockr Registration</h1>
+	<?php settings_errors(); ?>
 	<form method="post" action="options.php">
 	<?php settings_fields( 'lockr_options' ); ?>
 
@@ -230,21 +243,26 @@ function lockr_registration_form() {
 			</table>
 		<?php endif; ?>
 
-		<?php if ( isset( $_GET['p'] ) ): ?>
+		<?php if ( in_array( 'lockr-password', $error_codes ) ): ?>
 			<table class="form-table">
 				<?php do_settings_fields( 'lockr', 'lockr_password' ); ?>
 			</table>
 		<?php endif; ?>
+		<?php submit_button( 'Register Site' ); ?>
 	<?php else: ?>
 		<p> You're all set! Your site is registered and ready to begin using Lockr. Wasn't that easy?</p>
 		<p>There's nothing left for you do to here, your keys sent to Lockr are now protected. If you registered with the wrong account, you can click <a href="https://lockr.io/user/login" target="_blank">here</a> to go to Lockr and manage your sites.</p>
 	<?php endif; ?>
-
-	<h2>Advanced</h2>
+	</form>
+	<hr>
+	<h1>Advanced Configuration</h1>
+	<p>Use the following field to set the location of your custom certificate. If you are on a supported hosting provider you do not need to enter any value here.</p>
+	<form method="post" action="options.php">
+	<?php settings_fields( 'lockr_options' ); ?>
 	<table class="form-table">
 		<?php do_settings_fields( 'lockr', 'lockr_advanced' ); ?>
 	</table>
-	<?php submit_button( 'Submit' ); ?>
+	<?php submit_button( 'Confirm Certificate Location', 'secondary' ); ?>
 	</form>
 </div>
 <?php }

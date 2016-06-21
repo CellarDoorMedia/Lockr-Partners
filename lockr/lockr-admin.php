@@ -15,7 +15,7 @@ use Lockr\Exception\ClientException;
 use Lockr\Exception\ServerException;
 
 //Include our admin forms
-require_once( LOCKR__PLUGIN_DIR . '/lockr-admin-register.php' );
+require_once( LOCKR__PLUGIN_DIR . '/lockr-admin-config.php' );
 require_once( LOCKR__PLUGIN_DIR . '/lockr-admin-add.php' );
 require_once( LOCKR__PLUGIN_DIR . '/lockr-admin-edit.php' );
 
@@ -30,7 +30,7 @@ function lockr_admin_menu() {
 	add_submenu_page( 'lockr', __( 'Lockr Key Storage', 'lockr' ), __( 'All Keys', 'lockr' ), 'manage_options', 'lockr' );
 	add_submenu_page( 'lockr', __( 'Create Lockr Key', 'lockr' ), __( 'Add Key', 'lockr' ), 'manage_options', 'lockr-add-key', 'lockr_add_form' );
 	add_submenu_page( null, __( 'Edit Lockr Key', 'lockr' ), __( 'Edit Key', 'lockr' ), 'manage_options', 'lockr-edit-key', 'lockr_edit_form' );
-	add_submenu_page( 'lockr', __( 'Lockr Registration', 'lockr' ), __( 'Lockr Registraion', 'lockr' ), 'manage_options', 'lockr-site-registration', 'lockr_registration_form' );
+	add_submenu_page( 'lockr', __( 'Lockr Configuration', 'lockr' ), __( 'Lockr Configuration', 'lockr' ), 'manage_options', 'lockr-site-config', 'lockr_configuration_form' );
 }
 
 //Admin Table for Lockr Key Management
