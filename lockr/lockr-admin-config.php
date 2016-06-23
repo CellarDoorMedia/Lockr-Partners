@@ -170,8 +170,7 @@ function lockr_options_validate($input) {
 			));
 			curl_exec($ch);
 			update_option( 'lockr_requested', true );
-			wp_redirect( admin_url( 'admin.php?page=lockr-site-registration' ) );
-			exit;
+			return $options;
 		}
 	
 		$name = get_bloginfo( 'name', 'display' );
@@ -256,7 +255,12 @@ function lockr_configuration_form() {
 	</form>
 	<hr>
 	<h1>Advanced Configuration</h1>
-	<p>Use the following field to set the location of your custom certificate. If you are on a supported hosting provider you do not need to enter any value here.</p>
+	<?php if ( ! $partner_info ): ?>
+		<p>Use the following field to set the location of your custom certificate. If you are on a supported hosting provider you do not need to enter any value here.</p>
+	<?php else: ?>
+		<p><strong>Our system has detected that your website is hosted on one of our supported providers, this setting is not necessary under regular usage.</strong> </p>
+		<p>Use the following field to set the location of your custom certificate.</p>
+	<?php endif;?>
 	<form method="post" action="options.php">
 	<?php settings_fields( 'lockr_options' ); ?>
 	<table class="form-table">
