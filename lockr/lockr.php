@@ -5,7 +5,7 @@
 /*
 Plugin Name: Lockr
 Plugin URI: https://lockr.io/
-Description: Integrate with the Lockr hosted key management platform. Secure all your API and encryption keys according to industry best practices. With Lockr, key management is easy. 
+Description: Integrate with the Lockr hosted key management platform. Secure all your API and encryption keys according to industry best practices. With Lockr, key management is easy.
 Version: 1.0.0
 Author: Lockr
 Author URI: htts://lockr.io/
@@ -69,10 +69,10 @@ $lockr_db_version = '1.0';
 function lockr_install() {
 	global $wpdb;
 	global $lockr_db_version;
-	
+
 	$table_name = $wpdb->prefix . 'lockr_keys';
 	$charset_collate = $wpdb->get_charset_collate();
-	
+
 	$sql = "CREATE TABLE $table_name (
 		id mediumint(9) NOT null AUTO_INCREMENT,
 		time datetime DEFAULT '0000-00-00 00:00:00' NOT null,
@@ -82,12 +82,18 @@ function lockr_install() {
 		key_abstract text,
 		UNIQUE KEY id (id)
 	) $charset_collate;";
-	
+
 	require_once ( ABSPATH . 'wp-admin/includes/upgrade.php' );
 	dbDelta( $sql );
-	
+
 	add_option( 'lockr_db_version', $lockr_db_version );
-	
+
+	$partner = lockr_get_partner();
+
+	if ($partner) {
+		add_option( 'lockr_partner', $partner['name'] );
+		add_option( 'lockr_cert', $partner['cert'] );
+	}
 }
 
 /**
@@ -304,15 +310,15 @@ function lockr_get_key( $key_name ) {
 	$table_name = $wpdb->prefix . 'lockr_keys';
 	$query = $wpdb->prepare( "SELECT * FROM $table_name WHERE key_name = '%s'", array( $key_name ) );
 	$key_store = $wpdb->get_results( $query );
-	
+
 	if ( $key_store == null ) {
 		return false;
 	}
-	
+
 	$encoded = $key_store[0]->key_value;
-	
+
 	$client = lockr_key_client();
-	
+
 	try {
 		if( $client ) {
 		return $client->encrypted( $encoded )->get( $key_name );
@@ -351,7 +357,7 @@ function lockr_set_key( $key_name, $key_value, $key_label ) {
 	} else {
 		$encoded = $key_exists[0]->key_value;
 	}
-	
+
 	$client = lockr_key_client();
 
 	if ( $client === false ) {
